@@ -1,88 +1,89 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
-function Produtos() {
-  const [produtos, setProdutos] = useState([]);
-  const [editando, setEditando] = useState(null);
-  const [formEdit, setFormEdit] = useState({ nome: '', preco: '', tags: '' });
+// O Modal de Edição pode ser um componente separado, mas para simplificar,
+// vamos mantê-lo dentro deste arquivo por enquanto.
+function ModalEdicao({ produto, onClose, onSave }) {
+  const [produtoEditado, setProdutoEditado] = useState(produto);
 
-  // Buscar todos os produtos do banco
-  const fetchProdutos = async () => {
-    try {
-      const res = await axios.get('http://localhost:3001/produtos');
-      setProdutos(res.data || []);
-    } catch (err) {
-      console.error('Erro ao buscar produtos:', err);
-    }
+  const handleSave = (e) => {
+    e.preventDefault();
+    onSave(produtoEditado);
   };
-
-  useEffect(() => { fetchProdutos(); }, []);
-
-  // Excluir produto
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3001/produtos/${id}`);
-      fetchProdutos(); // atualizar lista
-    } catch (err) {
-      console.error('Erro ao deletar produto:', err);
-    }
-  };
-
-  // Iniciar edição
-  const startEdit = (produto) => {
-    setEditando(produto.id);
-    setFormEdit({ nome: produto.nome, preco: produto.preco, tags: produto.tags });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setFormEdit(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Salvar edição
-  const saveEdit = async (id) => {
-    try {
-      await axios.put(`http://localhost:3001/produtos/${id}`, formEdit);
-      setEditando(null);
-      fetchProdutos(); // atualizar lista
-    } catch (err) {
-      console.error('Erro ao editar produto:', err);
-    }
-  };
-
-  if (!produtos.length) return <p style={{ textAlign: 'center' }}>Nenhum produto cadastrado.</p>;
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-      {produtos.map(prod => (
-        <div key={prod.id} style={{ width: '250px', border: '1px solid #ddd', borderRadius: '10px', padding: '15px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
-          <img
-            src={prod.imagem_url || '/placeholder.png'}
-            alt={prod.nome}
-            style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '10px', marginBottom: '10px' }}
-          />
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Editar Produto</h2>
+        <form onSubmit={handleSave} className="modal-form">
+          <input type="text" value={produtoEditado.nome} onChange={(e) => setProdutoEditado({ ...produtoEditado, nome: e.target.value })} />
+          <input type="number" value={produtoEditado.preco} onChange={(e) => setProdutoEditado({ ...produtoEditado, preco: e.target.value })} />
+          <input type="text" value={produtoEditado.tags} onChange={(e) => setProdutoEditado({ ...produtoEditado, tags: e.target.value })} />
+          <div className="modal-actions">
+            <button type="submit" className="botao-salvar">Salvar</button>
+            <button type="button" onClick={onClose} className="botao-cancelar">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
-          {editando === prod.id ? (
-            <div style={{ width: '100%' }}>
-              <input type="text" name="nome" value={formEdit.nome} onChange={handleEditChange} style={{ width: '100%', marginBottom: '5px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
-              <input type="number" name="preco" value={formEdit.preco} onChange={handleEditChange} style={{ width: '100%', marginBottom: '5px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
-              <input type="text" name="tags" value={formEdit.tags} onChange={handleEditChange} style={{ width: '100%', marginBottom: '10px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
-              <button onClick={() => saveEdit(prod.id)} style={{ marginRight: '5px', padding: '7px 12px', background: '#4CAF50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Salvar</button>
-              <button onClick={() => setEditando(null)} style={{ padding: '7px 12px', background: '#aaa', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Cancelar</button>
+
+function Produtos({ produtos, onProdutoApagado, onProdutoAtualizado }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [produtoEmEdicao, setProdutoEmEdicao] = useState(null);
+  const apiUrl = process.env.REACT_APP_API_URL;
+
+  const handleApagar = async (id) => {
+    if (window.confirm('Tem certeza?')) {
+      try {
+        await axios.delete(`${apiUrl}/produtos/${id}`);
+        onProdutoApagado(id); // Avisa o App.js para remover da lista
+      } catch (err) {
+        alert('Erro ao apagar produto.');
+      }
+    }
+  };
+
+  const handleSalvarEdicao = async (produtoAtualizado) => {
+    try {
+      const dados = { nome: produtoAtualizado.nome, preco: produtoAtualizado.preco, tags: produtoAtualizado.tags };
+      const response = await axios.put(`${apiUrl}/produtos/${produtoAtualizado.id}`, dados);
+      onProdutoAtualizado(response.data); // Avisa o App.js para atualizar a lista
+      setIsModalOpen(false);
+    } catch (err) {
+      alert('Erro ao salvar edição.');
+    }
+  };
+
+  return (
+    <div>
+      <h2 style={{ textAlign: 'center' }}>Produtos Cadastrados</h2>
+      <div className="lista-container">
+        {produtos.map((produto) => (
+          <div key={produto.id} className="produto-card">
+            <img src={produto.imagem_url} alt={produto.nome} className="produto-imagem" />
+            <div className="produto-info">
+              <h3>{produto.nome}</h3>
+              <p>R$ {parseFloat(produto.preco).toFixed(2)}</p>
+              <span>Tags: {produto.tags}</span>
             </div>
-          ) : (
-            <div>
-              <h3>{prod.nome}</h3>
-              <p><strong>R$ {Number(prod.preco).toFixed(2)}</strong></p>
-              <small>{prod.tags}</small>
-              <div style={{ marginTop: '10px' }}>
-                <button onClick={() => startEdit(prod)} style={{ marginRight: '5px', padding: '5px 10px', background: '#2196F3', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Editar</button>
-                <button onClick={() => handleDelete(prod.id)} style={{ padding: '5px 10px', background: 'red', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Excluir</button>
-              </div>
+            <div className="botoes-acao">
+              <button onClick={() => { setProdutoEmEdicao(produto); setIsModalOpen(true); }} className="botao-editar">Editar</button>
+              <button onClick={() => handleApagar(produto.id)} className="botao-apagar">Apagar</button>
             </div>
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
+
+      {isModalOpen && (
+        <ModalEdicao 
+          produto={produtoEmEdicao}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSalvarEdicao}
+        />
+      )}
     </div>
   );
 }
