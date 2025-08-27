@@ -4,7 +4,7 @@ const cors = require('cors');
 const { storage } = require('./cloudinaryConfig');
 const upload = multer({ storage });
 const connectDB = require('./db'); // Importa a nova função de conexão
-const Produto = require('./models/Produto'); // Importa o nosso Model
+const Produto = require('./models/produto.js'); // Importa o nosso Model
 require('dotenv').config();
 
 const app = express();
