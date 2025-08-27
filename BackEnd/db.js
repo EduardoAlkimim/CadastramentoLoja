@@ -1,24 +1,24 @@
 require('dotenv').config();
-const mongoose = require('mongoose');
+const mysql = require('mysql2');
+const url = require('url');
 
-// Pega a URL de conexão do MongoDB do seu arquivo .env
-const mongoURI = process.env.MONGO_URI;
+// Pega a URL do .env
+const dbUrl = process.env.DATABASE_URL;
 
-// Função para conectar ao banco de dados
-const connectDB = async () => {
-  try {
-    await mongoose.connect(mongoURI, {
-      // Essas opções não são mais necessárias nas versões recentes do Mongoose, mas não atrapalham.
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('Conectado ao MongoDB Atlas!');
-  } catch (err) {
-    console.error('Erro ao conectar ao MongoDB:', err.message);
-    // Encerra o processo com falha
-    process.exit(1);
-  }
-};
+// Faz o parse da URL
+const parsedUrl = new url.URL(dbUrl);
 
-// Exportamos a função de conexão para ser chamada no arquivo principal
-module.exports = connectDB;
+const connection = mysql.createConnection({
+  host: parsedUrl.hostname,
+  port: parsedUrl.port,
+  user: parsedUrl.username,
+  password: parsedUrl.password,
+  database: parsedUrl.pathname.replace('/', '') // remove a barra inicial
+});
+
+connection.connect((err) => {
+  if (err) throw err;
+  console.log('Conectado ao MySQL no Railway!');
+});
+
+module.exports = connection;
