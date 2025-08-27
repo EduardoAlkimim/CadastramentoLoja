@@ -4,6 +4,8 @@ const cors = require('cors');
 const { storage } = require('./cloudinaryConfig');
 const upload = multer({ storage });
 const db = require('./db');
+require('dotenv').config();
+
 
 const app = express();
 app.use(cors());
@@ -17,7 +19,7 @@ app.post('/produtos', upload.single('imagem'), (req, res) => {
     }
 
     const { nome, preco, tags } = req.body;
-    const imagem_url = req.file.path;
+    const imagem_url = req.file.path || req.file.secure_url || req.file.url;
 
     const query = 'INSERT INTO produtos (nome, preco, tags, imagem_url) VALUES (?, ?, ?, ?)';
     db.query(query, [nome, preco, tags, imagem_url], (err, result) => {
