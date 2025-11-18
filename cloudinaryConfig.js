@@ -1,18 +1,15 @@
-require('dotenv').config();
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
-cloudinary.config(process.env.CLOUDINARY_URL);cloudinary.config(process.env.CLOUDINARY_URL);
+// Lê automaticamente CLOUDINARY_URL do .env
+cloudinary.config(process.env.CLOUDINARY_URL);
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: 'loja', 
-    allowed_formats: ['jpg', 'jpeg', 'png']
+    folder: 'loja/itens_avulsos',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
   },
 });
 
-module.exports = {
-  cloudinary,
-  storage
-};
+export { cloudinary, storage };

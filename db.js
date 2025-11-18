@@ -1,6 +1,8 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise'); // Importa a versão com Promises
-const url = require('url');
+import dotenv from "dotenv";
+import mysql from "mysql2/promise";
+import url from "url";
+
+dotenv.config();
 
 const dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {
@@ -11,24 +13,20 @@ const parsedUrl = new url.URL(dbUrl);
 
 const pool = mysql.createPool({
   host: parsedUrl.hostname,
-  port: parsedUrl.port || 4000, // Porta padrão do TiDB
+  port: parsedUrl.port || 4000,
   user: parsedUrl.username,
   password: parsedUrl.password,
-  database: parsedUrl.pathname.replace('/', ''),
-  
-  // --- A MÁGICA ESTÁ AQUI ---
+  database: parsedUrl.pathname.replace("/", ""),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  
-  // --- ISSO É OBRIGATÓRIO PARA O TIDB ---
   ssl: {
-    minVersion: 'TLSv1.2',
-    rejectUnauthorized: true
-  }
+    minVersion: "TLSv1.2",
+    rejectUnauthorized: true,
+  },
 });
 
-console.log('Pool de conexões com TiDB criado.');
+console.log("Pool de conexões com TiDB criado.");
 
-// Exporta o pool, não uma conexão única
-module.exports = pool;
+// **AGORA EXPORT DISSO AQUI**
+export default pool;
