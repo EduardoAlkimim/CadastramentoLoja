@@ -8,8 +8,8 @@ const upload = multer({ storage });
 
 router.get("/", getItens);
 router.get("/tags", getTagsItens);
-router.post("/", upload.single('imagem_url'), createItem);   // 🔥 nome certo aqui!
-router.put("/:id", upload.single('imagem_url'), updateItem);
+router.post("/", upload.single("imagem_url"), createItem); // 🔹 rota unificada e nome do campo consistente
+router.put("/:id", upload.single("imagem_url"), updateItem);
 router.delete("/:id", deleteItem);
 
 export default router;
