@@ -5,7 +5,8 @@ import {
   getTagsProdutos,
   createProduto,
   updateProduto,
-  deleteProduto
+  deleteProduto,
+  getProdutoById
 } from "../controllers/produtosController.js";
 import { storage } from "../cloudinaryConfig.js";
 
@@ -15,12 +16,11 @@ const upload = multer({ storage });
 // ROTAS
 router.get("/", getProdutos);
 router.get("/tags", getTagsProdutos);
+router.get("/:id", getProdutoById);
 
-// POST com imagem
-router.post("/", upload.single("imagem"), createProduto);
-
-// PUT agora aceita imagem também!
-router.put("/:id", upload.single("imagem"), updateProduto);
+// POST e PUT aceitam múltiplas imagens no campo 'galeria'
+router.post("/", upload.array("galeria", 5), createProduto);
+router.put("/:id", upload.array("galeria", 5), updateProduto);
 
 router.delete("/:id", deleteProduto);
 
